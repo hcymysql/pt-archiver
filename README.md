@@ -93,5 +93,6 @@ $insert_sleep='1';        ###每次插完1000行休眠1秒
 有网友反馈5.7环境有问题，请执行下面的2条语句重跑即可。 
 set global show_compatibility_56=on; 
 set global sql_mode=''; 
+不支持MySQL8.0
 
 
