@@ -18,16 +18,19 @@ CREATE TABLE IF NOT EXISTS ${mysql_table}_tmp like ${mysql_table};
 3、在原表上创建增，删，改三个触发器将数据拷贝的过程中，原表产生的数据变更更新到临时表里。
 
 DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_insert;
+
 CREATE TRIGGER pt_archiver_${mysql_database}_${mysql_table}_insert AFTER INSERT 
     ON ${mysql_table} FOR EACH ROW 
     REPLACE INTO ${mysql_database}.${mysql_table}_tmp ($column) VALUES ($new_column);
     
 DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_update;
+
 CREATE TRIGGER pt_archiver_${mysql_database}_${mysql_table}_update AFTER UPDATE 
     ON ${mysql_table} FOR EACH ROW 
     REPLACE INTO ${mysql_database}.${mysql_table}_tmp ($column) VALUES ($new_column);
     
 DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_delete;
+
 CREATE TRIGGER pt_archiver_${mysql_database}_${mysql_table}_delete AFTER DELETE 
     ON ${mysql_table} FOR EACH ROW 
     DELETE IGNORE FROM ${mysql_database}.${mysql_table}_tmp 
