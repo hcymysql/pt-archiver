@@ -12,8 +12,8 @@ $mysql_port='3307';
 $mysql_table='t1';
 #$where_column="update_time >= DATE_FORMAT(DATE_SUB(now(),interval 10 day),'%Y-%m-%d')";
 $where_column="id>=1";
-$limit_chunk='10000';	 ###分批次插入，默认一批插入1000行
-$insert_sleep='1';   	 ###每次插完1000行休眠1秒
+$limit_chunk='10000';	 ###分批次插入，默认一批插入10000行
+$insert_sleep='1';   	 ###每次插完10000行休眠1秒
 ###############################################
 
 
@@ -58,8 +58,6 @@ if(mysqli_affected_rows($conn)>0){
 $check_binlog_format = "SELECT VARIABLE_NAME,VARIABLE_VALUE FROM information_schema.GLOBAL_VARIABLES WHERE VARIABLE_NAME = 'BINLOG_FORMAT' AND VARIABLE_VALUE = 'ROW'";
 
 $query_binlog_format=mysqli_query($conn,$check_binlog_format);
-
-echo "受影响的行数: " . mysqli_affected_rows($conn). PHP_EOL;
 
 if(mysqli_affected_rows($conn)<=0){
         die("检测到binlog_format设置的值不是ROW格式，退出主程序。". PHP_EOL);
