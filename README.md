@@ -63,7 +63,9 @@ RENAME TABLE ${mysql_table} to ${mysql_table}_bak, ${mysql_table}_tmp to ${mysql
 6、删除原表上的三个触发器。
 
 DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_insert;
+
 DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_update;
+
 DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_delete;
 
 
