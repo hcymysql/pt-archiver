@@ -77,14 +77,23 @@ DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_delete;
 ######下面的配置信息修改成你自己的！！！######
 
 $mysql_server='10.10.159.31';
+
 $mysql_username='admin'; 
+
 $mysql_password='123456';
+
 $mysql_database='test';
+
 $mysql_port='3306';
+
 $mysql_table='sbtest1';
+
 ###$where_column="update_time >= DATE_FORMAT(DATE_SUB(now(),interval 30 day),'%Y-%m-%d')";
+
 $where_column="id>=99900000";
+
 $limit_chunk='1000';     ###分批次插入，默认一批插入1000行
+
 $insert_sleep='1';        ###每次插完1000行休眠1秒
 
 
