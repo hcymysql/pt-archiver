@@ -4,14 +4,14 @@
 ###
 ###############################################
 ######下面的配置信息修改成你自己的！！！######
-$mysql_server='192.168.199.122';
+$mysql_server='192.168.199.199';
 $mysql_username='admin'; 
 $mysql_password='123456';
 $mysql_database='test';
-$mysql_port='3307';
-$mysql_table='t1';
+$mysql_port='3306';
+$mysql_table='sbtest2';
 #$where_column="update_time >= DATE_FORMAT(DATE_SUB(now(),interval 10 day),'%Y-%m-%d')";
-$where_column="id>=1";
+$where_column="id>=900";
 $limit_chunk='10000';	 ###分批次插入，默认一批插入10000行
 $insert_sleep='1';   	 ###每次插完10000行休眠1秒
 ###############################################
@@ -47,12 +47,19 @@ if(mysqli_affected_rows($conn)<=0){
         die("检测到表没有主键或者主键字段默认不是id，退出主程序。". PHP_EOL);
 }
 
-$check_foreign_key = "SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE CONSTRAINT_SCHEMA = '".$mysql_database."' AND CONSTRAINT_NAME <> 'PRIMARY'";
+$check_foreign_key = "SELECT TABLE_NAME,REFERENCED_TABLE_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = '${mysql_database}' AND REFERENCED_TABLE_NAME IS NOT NULL";
 
 $query_fk=mysqli_query($conn,$check_foreign_key);
 
-if(mysqli_affected_rows($conn)>0){
-        die("检测到表含有外键，退出主程序。". PHP_EOL);
+while($row_fk = mysqli_fetch_array($query_fk)) {
+	if($row_fk[0] == $mysql_table) {
+		echo "检测到子表含有外键，子表是：" . $row_fk[0] . "，他的父表是：".$row_fk[1]."。退出主程序。". PHP_EOL;
+		exit;
+	}
+	if($row_fk[1] == $mysql_table) {
+		echo "检测到父表含有外键，父表是：" . $row_fk[1] . "，他的子表是：".$row_fk[0]."。退出主程序。". PHP_EOL;
+		exit;
+	}
 }
 
 $check_binlog_format = "SELECT VARIABLE_NAME,VARIABLE_VALUE FROM information_schema.GLOBAL_VARIABLES WHERE VARIABLE_NAME = 'BINLOG_FORMAT' AND VARIABLE_VALUE = 'ROW'";
