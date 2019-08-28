@@ -4,14 +4,14 @@
 ###
 ###############################################
 ######下面的配置信息修改成你自己的！！！######
-$mysql_server='192.168.199.199';
+$mysql_server='10.10.159.31';
 $mysql_username='admin'; 
 $mysql_password='123456';
 $mysql_database='test';
 $mysql_port='3306';
-$mysql_table='sbtest2';
+$mysql_table='t1';
 #$where_column="update_time >= DATE_FORMAT(DATE_SUB(now(),interval 10 day),'%Y-%m-%d')";
-$where_column="id>=900";
+$where_column="id>=1";
 $limit_chunk='10000';	 ###分批次插入，默认一批插入10000行
 $insert_sleep='1';   	 ###每次插完10000行休眠1秒
 ###############################################
@@ -180,6 +180,21 @@ if ($result4) {
 	break;
 	}	
 	else{
+		echo mysqli_error($conn) . PHP_EOL;
+		//脚本失败的时候，触发器自动删除------------------------------ 
+                $drop_trigger="DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_insert;
+                               DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_update;
+                               DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_delete;";
+                if (mysqli_multi_query($conn, $drop_trigger)) {
+                    do {
+                        if ($result6 = mysqli_store_result($conn)) {
+                                while ($row2 = mysqli_fetch_row($result6)) {
+                                }
+                                mysqli_free_result($result6);
+                        }
+                    } while (mysqli_next_result($conn));
+                }
+		//------------------------------------------------------------
      		die("${mysql_table}表归档失败"  .mysqli_error($conn) . PHP_EOL);		
 	}
     }
