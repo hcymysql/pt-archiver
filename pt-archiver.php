@@ -138,8 +138,8 @@ echo $sql_get_Id . PHP_EOL;
 
 $result3 = mysqli_query($conn,$sql_get_Id);
 while($row1 = mysqli_fetch_array($result3)){
-        $begin_Id=$row1['0'];
-        $max_Id=$row1['1'];
+        $begin_Id=number_format($row1['0'] ,0 ,'' ,''); //防止转换为科学计数法
+        $max_Id=number_format($row1['1'] ,0 ,'' ,''); //防止转换为科学计数法
 }
 while(1==1){
 $insert_select_tmp = "INSERT LOW_PRIORITY IGNORE INTO ${mysql_database}.${mysql_table}_tmp SELECT * FROM ${mysql_database}.${mysql_table} WHERE id>=".$begin_Id." AND id<".($begin_Id=$begin_Id+$limit_chunk)." LOCK IN SHARE MODE ";
