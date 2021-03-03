@@ -133,7 +133,7 @@ else{
 
 //抽取历史数据到临时表
 
-$sql_get_Id = "SELECT id,(SELECT max(id) FROM ${mysql_database}.${mysql_table}) AS max_id FROM  ${mysql_database}.${mysql_table} WHERE ${where_column} LIMIT 1";
+$sql_get_Id = "SELECT id,(SELECT max(id) FROM ${mysql_database}.${mysql_table}) AS max_id FROM  ${mysql_database}.${mysql_table} WHERE ${where_column} order by id asc LIMIT 1";
 echo $sql_get_Id . PHP_EOL;
 
 $result3 = mysqli_query($conn,$sql_get_Id);
