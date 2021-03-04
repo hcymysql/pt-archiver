@@ -142,7 +142,7 @@ while($row1 = mysqli_fetch_array($result3)){
         $max_Id=number_format($row1['1'] ,0 ,'' ,''); //防止转换为科学计数法
 }
 while(1==1){
-$insert_select_tmp = "INSERT LOW_PRIORITY IGNORE INTO ${mysql_database}.${mysql_table}_tmp SELECT * FROM ${mysql_database}.${mysql_table} WHERE id>=".$begin_Id." AND id<".($begin_Id=$begin_Id+$limit_chunk)." LOCK IN SHARE MODE ";
+$insert_select_tmp = "INSERT LOW_PRIORITY IGNORE INTO ${mysql_database}.${mysql_table}_tmp SELECT * FROM ${mysql_database}.${mysql_table} WHERE ${where_column} AND id>=".$begin_Id." AND id<".($begin_Id=$begin_Id+$limit_chunk)." LOCK IN SHARE MODE ";
 echo $insert_select_tmp . PHP_EOL;
 
 mysqli_query($conn,"SET tx_isolation = 'REPEATABLE-READ'");
