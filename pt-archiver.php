@@ -62,7 +62,9 @@ while($row_fk = mysqli_fetch_array($query_fk)) {
 	}
 }
 
-$check_binlog_format = "SELECT VARIABLE_NAME,VARIABLE_VALUE FROM information_schema.GLOBAL_VARIABLES WHERE VARIABLE_NAME = 'BINLOG_FORMAT' AND VARIABLE_VALUE = 'ROW'";
+//$check_binlog_format = "SELECT VARIABLE_NAME,VARIABLE_VALUE FROM information_schema.GLOBAL_VARIABLES WHERE VARIABLE_NAME = 'BINLOG_FORMAT' AND VARIABLE_VALUE = 'ROW'";
+//兼容MySQL 8.0
+$check_binlog_format = "show variables where Variable_name = 'BINLOG_FORMAT' and Value = 'ROW'";
 
 $query_binlog_format=mysqli_query($conn,$check_binlog_format);
 
