@@ -118,9 +118,11 @@ set global sql_mode='';
 
 
 ###############################################
+
 如果对原表进行删除归档数据，可以借助原生工具 pt-archiver 进行分批缓慢删除。
 
 删除数据
+
 # pt-archiver --source h=127.0.0.1,P=3306,u=admin,p='hechunyang',D=test,t=sbtest1 --purge --charset=utf8 --where "id <= 400000" --progress=200  --limit=200 --sleep=1 --txn-size=200  --statistics
 
 解释：删除test库，sbtest1表数据，字符集为utf8，删除条件是 id <= 5000000，每次取出200行进行处理，每处理200行则进行一次提交，每完成一次处理休眠1秒。
