@@ -19,9 +19,9 @@ Percona pt-archiver重构版--大表数据归档工具
 
 ```DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_insert;```
 
-```CREATE TRIGGER pt_archiver_${mysql_database}_${mysql_table}_insert AFTER INSERT 
-    ON ${mysql_table} FOR EACH ROW 
-    REPLACE INTO ${mysql_database}.${mysql_table}_tmp ($column) VALUES ($new_column);```
+```CREATE TRIGGER pt_archiver_${mysql_database}_${mysql_table}_insert AFTER INSERT ```
+    ```ON ${mysql_table} FOR EACH ROW ```
+    ```REPLACE INTO ${mysql_database}.${mysql_table}_tmp ($column) VALUES ($new_column);```
     
 ```DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_update;```
 
