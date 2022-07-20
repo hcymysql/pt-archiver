@@ -48,9 +48,11 @@ CREATE TRIGGER pt_archiver_${mysql_database}_${mysql_table}_delete AFTER DELETE
 
 4、拷贝原表数据到临时表（默认1000条一批次插入并休眠1秒）
 
-```INSERT LOW_PRIORITY IGNORE INTO ${mysql_database}.${mysql_table}_tmp 
+```
+INSERT LOW_PRIORITY IGNORE INTO ${mysql_database}.${mysql_table}_tmp 
 SELECT * FROM ${mysql_database}.${mysql_table} WHERE id>=".$begin_Id."
- AND id<".($begin_Id=$begin_Id+$limit_chunk)." LOCK IN SHARE MODE;```
+ AND id<".($begin_Id=$begin_Id+$limit_chunk)." LOCK IN SHARE MODE;
+```
 
 
 通过主键id进行范围查找，分批次控制插入行数，已减少对原表的锁定时间（读锁/共享锁）---将大事务拆分成若干块小事务，如果临时表已经存在该记录将会忽略插入，并且在数据导入时，我们能通过sleep参数控制休眠时间，以减少对磁盘IO的冲击。
