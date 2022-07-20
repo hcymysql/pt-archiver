@@ -120,7 +120,7 @@ set global show_compatibility_56=on;
 
 set global sql_mode=''; 
 
-不支持MySQL8.0
+已兼容MySQL8.0
 
 
 ###############################################
