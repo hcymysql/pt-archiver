@@ -46,27 +46,27 @@ CREATE TRIGGER pt_archiver_${mysql_database}_${mysql_table}_delete AFTER DELETE
 
 4、拷贝原表数据到临时表（默认1000条一批次插入并休眠1秒）
 
-INSERT LOW_PRIORITY IGNORE INTO ${mysql_database}.${mysql_table}_tmp 
+```INSERT LOW_PRIORITY IGNORE INTO ${mysql_database}.${mysql_table}_tmp 
 SELECT * FROM ${mysql_database}.${mysql_table} WHERE id>=".$begin_Id."
- AND id<".($begin_Id=$begin_Id+$limit_chunk)." LOCK IN SHARE MODE;
+ AND id<".($begin_Id=$begin_Id+$limit_chunk)." LOCK IN SHARE MODE;```
 
 
 通过主键id进行范围查找，分批次控制插入行数，已减少对原表的锁定时间（读锁/共享锁）---将大事务拆分成若干块小事务，如果临时表已经存在该记录将会忽略插入，并且在数据导入时，我们能通过sleep参数控制休眠时间，以减少对磁盘IO的冲击。
 
 5、Rename原表为_bak，临时表Rename为原表，名字互换。
 
-RENAME TABLE ${mysql_table} to ${mysql_table}_bak, ${mysql_table}_tmp to ${mysql_table};
+```RENAME TABLE ${mysql_table} to ${mysql_table}_bak, ${mysql_table}_tmp to ${mysql_table};```
 
 
 执行表改名字，会加table metadata lock元数据表锁，但基本是瞬间结束，故对线上影响不大。
 
 6、删除原表上的三个触发器。
 
-DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_insert;
+```DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_insert;
 
 DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_update;
 
-DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_delete;
+DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_delete;```
 
 
 至此全部过程结束，类似pt-osc原理。
