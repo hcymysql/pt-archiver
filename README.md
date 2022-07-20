@@ -86,7 +86,7 @@ DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_delete;
 
 
 ######下面的配置信息修改成你自己的！！！######
-
+```
 $mysql_server='10.10.159.31';
 
 $mysql_username='admin'; 
@@ -106,7 +106,7 @@ $where_column="update_time >= DATE_FORMAT(DATE_SUB(now(),interval 30 day),'%Y-%m
 $limit_chunk='10000';     ###分批次插入，默认一批插入10000行
 
 $insert_sleep='1';        ###每次插完1000行休眠1秒
-
+```
 
 ###############################################
 
@@ -115,10 +115,11 @@ $insert_sleep='1';        ###每次插完1000行休眠1秒
 # php pt-archiver.php
 
 有网友反馈5.7环境有问题，请执行下面的2条语句重跑即可。 
-
+```
 set global show_compatibility_56=on; 
 
 set global sql_mode=''; 
+```
 
 已兼容MySQL8.0
 
