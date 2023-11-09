@@ -80,41 +80,17 @@ DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_delete;
 注：考虑到删库跑路等安全性问题，工具没有对原表进行任何删除归档数据的操作。
 --------------------------------------------------------------------------------------------------------------------------------
 
-# 安装与使用（Centos 7系统）
+# 1) PHP环境安装（Centos 7系统）
 ```
 shell> yum install php php-mysqlnd -y
 ```
 
-######下面的配置信息修改成你自己的！！！######
-```
-$mysql_server='10.10.159.31';
-
-$mysql_username='admin'; 
-
-$mysql_password='123456';
-
-$mysql_database='test';
-
-$mysql_port='3306';
-
-$mysql_table='sbtest1';
-
-$where_column="update_time >= DATE_FORMAT(DATE_SUB(now(),interval 30 day),'%Y-%m-%d')";
-
-##$where_column="id>=99900000";
-
-$limit_chunk='10000';     ###分批次插入，默认一批插入10000行
-
-$insert_sleep='1';        ###每次插完1000行休眠1秒
-```
-
-###############################################
-
-执行
+# 2) pt-archiver.php执行
 ```
 shell> php pt-archiver.php -h 192.168.0.10 -u admin -p "123456" -d test -P 3306 -t sbtest1 -w "id>=99900000" --limit 10000 --sleep 1
 ```
-注：--limit 分批次插入，默认一批插入10000行
+注：-w 过滤条件，例如"update_time >= DATE_FORMAT(DATE_SUB(now(),interval 10 day),'%Y-%m-%d')"
+    --limit 分批次插入，默认一批插入10000行
     --sleep 每次插完1000行休眠1秒
 
 # 有网友反馈5.7环境有问题，请执行下面的2条语句重跑即可。 
@@ -126,9 +102,7 @@ mysql> set global sql_mode='';
 ###############################################
 
 ### 如果对原表进行删除归档数据，可以借助原生工具 pt-archiver 进行分批缓慢删除。
-
-删除数据
-
-# pt-archiver --source h=127.0.0.1,P=3306,u=admin,p='hechunyang',D=test,t=sbtest1 --purge --charset=utf8 --where "id <= 500000" --progress=200  --limit=200 --sleep=1 --txn-size=200  --statistics
-
+```
+shell> pt-archiver --source h=127.0.0.1,P=3306,u=admin,p='hechunyang',D=test,t=sbtest1 --purge --charset=utf8 --where "id <= 500000" --progress=200  --limit=200 --sleep=1 --txn-size=200  --statistics
+```
 解释：删除test库，sbtest1表数据，字符集为utf8，删除条件是 id <= 5000000，每次取出200行进行处理，每处理200行则进行一次提交，每完成一次处理休眠1秒。
