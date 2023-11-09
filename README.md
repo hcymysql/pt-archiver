@@ -80,9 +80,10 @@ DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_delete;
 注：考虑到删库跑路等安全性问题，工具没有对原表进行任何删除归档数据的操作。
 --------------------------------------------------------------------------------------------------------------------------------
 
-# 使用（Centos 7系统，先安装php环境）
-# yum install php php-mysqlnd -y
-
+# 安装与使用（Centos 7系统）
+```
+shell> yum install php php-mysqlnd -y
+```
 
 ######下面的配置信息修改成你自己的！！！######
 ```
@@ -113,6 +114,8 @@ $insert_sleep='1';        ###每次插完1000行休眠1秒
 ```
 shell> php pt-archiver.php -h 192.168.0.10 -u admin -p "123456" -d test -P 3306 -t sbtest1 -w "id>=99900000" --limit 10000 --sleep 1
 ```
+注：--limit 分批次插入，默认一批插入10000行
+    --sleep 每次插完1000行休眠1秒
 
 # 有网友反馈5.7环境有问题，请执行下面的2条语句重跑即可。 
 ```
