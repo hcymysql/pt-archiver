@@ -8,7 +8,7 @@ Percona pt-archiver重构版--大表数据归档工具
 
 具体的工作原理：
 
-1、如果表有触发器、或者表有外键、或者表没有主键或者主键字段默认不是id、或者binlog_format设置的值不是ROW格式，工具将直接退出，不予执行。
+1、如果表有触发器、或者表有外键、或者表没有主键、或者binlog_format设置的值不是ROW格式，工具将直接退出，不予执行。
 
 2、创建一个归档临时表和原表一样的空表结构。
 
@@ -54,13 +54,11 @@ SELECT * FROM ${mysql_database}.${mysql_table} WHERE id>=".$begin_Id."
  AND id<".($begin_Id=$begin_Id+$limit_chunk)." LOCK IN SHARE MODE;
 ```
 
-
-通过主键id进行范围查找，分批次控制插入行数，已减少对原表的锁定时间（读锁/共享锁）---将大事务拆分成若干块小事务，如果临时表已经存在该记录将会忽略插入，并且在数据导入时，我们能通过sleep参数控制休眠时间，以减少对磁盘IO的冲击。
+通过主键id（主键名字可以是非id）进行范围查找，分批次控制插入行数，已减少对原表的锁定时间（读锁/共享锁）---将大事务拆分成若干块小事务，如果临时表已经存在该记录将会忽略插入，并且在数据导入时，我们能通过sleep参数控制休眠时间，以减少对磁盘IO的冲击。
 
 5、Rename原表为_bak，临时表Rename为原表，名字互换。
 
 ```RENAME TABLE ${mysql_table} to ${mysql_table}_bak, ${mysql_table}_tmp to ${mysql_table};```
-
 
 执行表改名字，会加table metadata lock元数据表锁，但基本是瞬间结束，故对线上影响不大。
 
@@ -73,7 +71,6 @@ DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_update;
 
 DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_delete;
 ```
-
 
 至此全部过程结束，类似pt-osc原理。
 
@@ -98,9 +95,7 @@ shell> php pt-archiver.php -h 192.168.0.10 -u admin -p "123456" -d test -P 3306 
 mysql> set global show_compatibility_56=on; 
 mysql> set global sql_mode=''; 
 ```
-
-###############################################
-
+---------------------------------------------------------------------------------------------
 ### 如果对原表进行删除归档数据，可以借助原生工具 pt-archiver 进行分批缓慢删除。
 ```
 shell> pt-archiver --source h=127.0.0.1,P=3306,u=admin,p='hechunyang',D=test,t=sbtest1 --purge --charset=utf8 --where "id <= 500000" --progress=200  --limit=200 --sleep=1 --txn-size=200  --statistics
