@@ -1,24 +1,46 @@
 <?php
+
 ###############################################
-### pt-archiver重构版
-###
+### Percona pt-archiver重构版--大表数据归档工具
+### https://github.com/hcymysql/pt-archiver
 ###############################################
-######下面的配置信息修改成你自己的！！！######
-$mysql_server='10.10.159.31';
-$mysql_username='admin'; 
-$mysql_password='123456';
-$mysql_database='test';
-$mysql_port='3306';
-$mysql_table='t1';
-#$where_column="update_time >= DATE_FORMAT(DATE_SUB(now(),interval 10 day),'%Y-%m-%d')";
-$where_column="id>=1";
-$limit_chunk='10000';	 ###分批次插入，默认一批插入10000行
-$insert_sleep='1';   	 ###每次插完10000行休眠1秒
+
+$options = getopt("h:u:p:d:P:t:w:v", ["limit:", "sleep:", "help"]);
+
+// 检查是否传入了帮助参数，如果是，则显示使用帮助并退出
+if (isset($options['help'])) {
+    echo "使用方法:\n";
+    echo "php pt-archiver.php -h <服务器地址> -u <用户名> -p <密码> -d <数据库名> -P <端口> -t <表名> -w <过滤条件> --limit <分批次插入数量> --sleep <插入后的休眠时间>\n";
+    exit;
+}
+
+// 检查版本号参数
+if (isset($options['v'])) {
+    echo "更新时间：2023-11-09  版本号: 1.1.1\n";
+    exit;
+}
+
+// 检查必选参数
+if (!isset($options['h'], $options['u'], $options['p'], $options['d'], $options['P'], $options['t'], $options['w'], $options['limit'], $options['sleep'])) {
+    die("缺少参数，请使用 --help 选项查看使用说明。\n");
+}
+
+$mysql_server = $options['h'];
+$mysql_username = $options['u'];
+$mysql_password = $options['p'];
+$mysql_database = $options['d'];
+$mysql_port = $options['P'];
+$mysql_table = $options['t'];
+$where_column = $options['w'];
+$limit_chunk = $options['limit'];
+$insert_sleep = $options['sleep'];
+
 ###############################################
 
 
 ######下面的代码不用更改！！！######
 //########################################################//
+ini_set('date.timezone','Asia/Shanghai');
 header("Content-type:text/html;charset=utf-8;");
 $old_c=array();
 $new_c=array();
@@ -39,12 +61,12 @@ if(mysqli_affected_rows($conn)>0){
         die("检测到表已有触发器，退出主程序。". PHP_EOL);
 }
 
-$check_primary_key_id = "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '".$mysql_database."' AND TABLE_NAME = '".$mysql_table."' AND COLUMN_NAME = 'id' AND COLUMN_KEY = 'PRI'";
+$check_primary_key_id = "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '".$mysql_database."' AND TABLE_NAME = '".$mysql_table."' AND COLUMN_KEY = 'PRI'";
 
 $query_pri=mysqli_query($conn,$check_primary_key_id);
 
 if(mysqli_affected_rows($conn)<=0){
-        die("检测到表没有主键或者主键字段默认不是id，退出主程序。". PHP_EOL);
+        die("检测到表没有主键，退出主程序。". PHP_EOL);
 }
 
 $check_foreign_key = "SELECT TABLE_NAME,REFERENCED_TABLE_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = '${mysql_database}' AND REFERENCED_TABLE_NAME IS NOT NULL";
@@ -111,7 +133,7 @@ CREATE TRIGGER pt_archiver_${mysql_database}_${mysql_table}_update AFTER UPDATE
 DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_delete;
 CREATE TRIGGER pt_archiver_${mysql_database}_${mysql_table}_delete AFTER DELETE 
 	ON ${mysql_table} FOR EACH ROW 
-	DELETE IGNORE FROM ${mysql_database}.${mysql_table}_tmp WHERE ${mysql_database}.${mysql_table}_tmp.id <=> OLD.id;
+	DELETE IGNORE FROM ${mysql_database}.${mysql_table}_tmp WHERE ${mysql_database}.${mysql_table}_tmp._rowid <=> OLD._rowid;
 ";
 
 echo "$trigger". PHP_EOL;
@@ -135,7 +157,7 @@ else{
 
 //抽取历史数据到临时表
 
-$sql_get_Id = "SELECT id,(SELECT max(id) FROM ${mysql_database}.${mysql_table}) AS max_id FROM  ${mysql_database}.${mysql_table} WHERE ${where_column} order by id asc LIMIT 1";
+$sql_get_Id = "SELECT _rowid,(SELECT max(_rowid) FROM ${mysql_database}.${mysql_table}) AS max_rowid FROM  ${mysql_database}.${mysql_table} WHERE ${where_column} order by _rowid asc LIMIT 1";
 echo $sql_get_Id . PHP_EOL;
 
 $result3 = mysqli_query($conn,$sql_get_Id);
@@ -144,7 +166,7 @@ while($row1 = mysqli_fetch_array($result3)){
         $max_Id=number_format($row1['1'] ,0 ,'' ,''); //防止转换为科学计数法
 }
 while(1==1){
-$insert_select_tmp = "INSERT LOW_PRIORITY IGNORE INTO ${mysql_database}.${mysql_table}_tmp SELECT * FROM ${mysql_database}.${mysql_table} WHERE ${where_column} AND (id>=".$begin_Id." AND id<".($begin_Id=$begin_Id+$limit_chunk).") LOCK IN SHARE MODE ";
+$insert_select_tmp = "INSERT LOW_PRIORITY IGNORE INTO ${mysql_database}.${mysql_table}_tmp SELECT * FROM ${mysql_database}.${mysql_table} WHERE ${where_column} AND (_rowid>=".$begin_Id." AND _rowid<".($begin_Id=$begin_Id+$limit_chunk).") LOCK IN SHARE MODE ";
 echo $insert_select_tmp . PHP_EOL;
 
 mysqli_query($conn,"SET tx_isolation = 'REPEATABLE-READ'");
@@ -163,7 +185,7 @@ if ($result4) {
 	continue;
     }
     else{
-	$exec_sql="RENAME TABLE ${mysql_table} to ${mysql_table}_bak, ${mysql_table}_tmp to ${mysql_table};
+	$exec_sql="RENAME TABLE ${mysql_table} to ${mysql_table}_bak_".date('Ymd').", ${mysql_table}_tmp to ${mysql_table};
 		   DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_insert;
 		   DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_update;
                    DROP TRIGGER IF EXISTS pt_archiver_${mysql_database}_${mysql_table}_delete;";
